@@ -1,0 +1,244 @@
+import java.io.*;
+import java.nio.file.*;
+import java.nio.file.attribute.BasicFileAttributes;
+import java.util.Scanner;
+
+public class FileOperationsDemo {
+    private static Scanner scanner = new Scanner(System.in);
+
+    public static void main(String[] args) {
+        int choice;
+        do {
+            System.out.println("\nFile Operations Menu:");
+            System.out.println("1. Create a new directory");
+            System.out.println("2. Create a new text file and write content to it");
+            System.out.println("3. Read content from an existing text file");
+            System.out.println("4. Append new content to an existing text file");
+            System.out.println("5. Copy content from one text file to another");
+            System.out.println("6. Delete a text file");
+            System.out.println("7. List all files and directories in a given directory");
+            System.out.println("8. Search for a specific file in a directory and its subdirectories");
+            System.out.println("9. Rename a file");
+            System.out.println("10. Get information about a file");
+            System.out.println("0. Exit");
+            System.out.print("Enter your choice: ");
+            choice = scanner.nextInt();
+            scanner.nextLine(); // Consume newline character
+
+            switch (choice) {
+                case 1:
+                    createDirectory();
+                    break;
+                case 2:
+                    createAndWriteToFile();
+                    break;
+                case 3:
+                    readFromFile();
+                    break;
+                case 4:
+                    appendToFile();
+                    break;
+                case 5:
+                    copyFileContent();
+                    break;
+                case 6:
+                    deleteFile();
+                    break;
+                case 7:
+                    listFilesAndDirectories();
+                    break;
+                case 8:
+                    searchFile();
+                    break;
+                case 9:
+                    renameFile();
+                    break;
+                case 10:
+                    getFileInformation();
+                    break;
+                case 0:
+                    System.out.println("Exiting File Operations Demo. Goodbye!");
+                    break;
+                default:
+                    System.out.println("Invalid choice! Please enter a valid option.");
+            }
+        } while (choice != 0);
+        scanner.close();
+    }
+
+    private static void createDirectory() {
+        System.out.print("Enter directory path to create: ");
+        String dirPath = scanner.nextLine();
+        File directory = new File(dirPath);
+
+        if (directory.mkdirs()) {
+            System.out.println("Directory created successfully.");
+        } else {
+            System.out.println("Failed to create directory.");
+        }
+    }
+
+    private static void createAndWriteToFile() {
+        System.out.print("Enter file path to create: ");
+        String filePath = scanner.nextLine();
+
+        try (PrintWriter writer = new PrintWriter(filePath)) {
+            System.out.print("Enter content to write to file: ");
+            String content = scanner.nextLine();
+            writer.println(content);
+            System.out.println("Content written to file successfully.");
+        } catch (IOException e) {
+            System.out.println("Error writing to file: " + e.getMessage());
+        }
+    }
+
+    private static void readFromFile() {
+        System.out.print("Enter file path to read: ");
+        String filePath = scanner.nextLine();
+
+        try (BufferedReader reader = new BufferedReader(new FileReader(filePath))) {
+            String line;
+            System.out.println("Reading content from file:");
+            while ((line = reader.readLine()) != null) {
+                System.out.println(line);
+            }
+        } catch (IOException e) {
+            System.out.println("Error reading from file: " + e.getMessage());
+        }
+    }
+
+    private static void appendToFile() {
+        System.out.print("Enter file path to append: ");
+        String filePath = scanner.nextLine();
+
+        try (FileWriter fileWriter = new FileWriter(filePath, true);
+             BufferedWriter writer = new BufferedWriter(fileWriter);
+             PrintWriter printWriter = new PrintWriter(writer)) {
+            System.out.print("Enter content to append to file: ");
+            String content = scanner.nextLine();
+            printWriter.println(content);
+            System.out.println("Content appended to file successfully.");
+        } catch (IOException e) {
+            System.out.println("Error appending to file: " + e.getMessage());
+        }
+    }
+
+    private static void copyFileContent() {
+        System.out.print("Enter source file path: ");
+        String sourceFilePath = scanner.nextLine();
+        System.out.print("Enter destination file path: ");
+        String destFilePath = scanner.nextLine();
+
+        try (BufferedReader reader = new BufferedReader(new FileReader(sourceFilePath));
+             PrintWriter writer = new PrintWriter(destFilePath)) {
+            String line;
+            while ((line = reader.readLine()) != null) {
+                writer.println(line);
+            }
+            System.out.println("File content copied successfully.");
+        } catch (IOException e) {
+            System.out.println("Error copying file content: " + e.getMessage());
+        }
+    }
+
+    private static void deleteFile() {
+        System.out.print("Enter file path to delete: ");
+        String filePath = scanner.nextLine();
+        File file = new File(filePath);
+
+        if (file.delete()) {
+            System.out.println("File deleted successfully.");
+        } else {
+            System.out.println("Failed to delete file.");
+        }
+    }
+
+    private static void listFilesAndDirectories() {
+        System.out.print("Enter directory path to list files and directories: ");
+        String dirPath = scanner.nextLine();
+        File directory = new File(dirPath);
+
+        if (!directory.exists() || !directory.isDirectory()) {
+            System.out.println("Invalid directory path.");
+            return;
+        }
+
+        System.out.println("Files and directories in " + dirPath + ":");
+        File[] files = directory.listFiles();
+        if (files != null) {
+            for (File file : files) {
+                System.out.println(file.getName() + (file.isDirectory() ? " [Directory]" : " [File]"));
+            }
+        }
+    }
+
+    private static void searchFile() {
+        System.out.print("Enter directory path to search: ");
+        String dirPath = scanner.nextLine();
+        System.out.print("Enter file name to search: ");
+        String fileName = scanner.nextLine();
+
+        File directory = new File(dirPath);
+        if (!directory.exists() || !directory.isDirectory()) {
+            System.out.println("Invalid directory path.");
+            return;
+        }
+
+        searchFileRecursive(directory, fileName);
+    }
+
+    private static void searchFileRecursive(File directory, String fileName) {
+        File[] files = directory.listFiles();
+        if (files != null) {
+            for (File file : files) {
+                if (file.isDirectory()) {
+                    searchFileRecursive(file, fileName);
+                } else if (file.getName().equals(fileName)) {
+                    System.out.println("File found: " + file.getAbsolutePath());
+                    return;
+                }
+            }
+        }
+    }
+
+    private static void renameFile() {
+        System.out.print("Enter current file path: ");
+        String currentFilePath = scanner.nextLine();
+        System.out.print("Enter new file path: ");
+        String newFilePath = scanner.nextLine();
+
+        File currentFile = new File(currentFilePath);
+        File newFile = new File(newFilePath);
+
+        if (currentFile.renameTo(newFile)) {
+            System.out.println("File renamed successfully.");
+        } else {
+            System.out.println("Failed to rename file.");
+        }
+    }
+
+    private static void getFileInformation() {
+        System.out.print("Enter file path to get information: ");
+        String filePath = scanner.nextLine();
+        File file = new File(filePath);
+
+        if (!file.exists()) {
+            System.out.println("File does not exist.");
+            return;
+        }
+
+        System.out.println("File Information:");
+        System.out.println("File Name: " + file.getName());
+        System.out.println("Absolute Path: " + file.getAbsolutePath());
+        System.out.println("File Size: " + file.length() + " bytes");
+
+        BasicFileAttributes attributes;
+        try {
+            attributes = Files.readAttributes(file.toPath(), BasicFileAttributes.class);
+            System.out.println("Creation Time: " + attributes.creationTime());
+            System.out.println("Last Modified Time: " + attributes.lastModifiedTime());
+        } catch (IOException e) {
+            System.out.println("Error getting file information: " + e.getMessage());
+        }
+    }
+}
